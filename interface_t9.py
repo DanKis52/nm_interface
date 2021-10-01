@@ -1,4 +1,5 @@
 import tkinter as tk
+from ctypes import *
 
 
 class Interface:
@@ -10,15 +11,15 @@ class Interface:
         master.configure(bg='#ececec')  # фон
         master.minsize(1110, 700)  # минимальный размер окна
 
-        self.x0 = tk.StringVar(master, '1')  # x0
-        self.u0 = tk.StringVar(master, '2')  # u0
-        self.a1 = tk.StringVar(master, '12')  # a1
-        self.a3 = tk.StringVar(master, '21')  # a3
-        self.m = tk.StringVar(master, '123')  # m
-        self.accuracy = tk.StringVar(master, '0.00000001')  # точность выхода на границу
-        self.error = tk.StringVar(master, '0.0001')  # контроль лок. поргрешности
-        self.max_step = tk.StringVar(master, '10000000')  # макс. число шагов
-        self.step = tk.StringVar(master, '0.01')  # начальный шаг
+        self.x0 = tk.DoubleVar(master, 1)  # x0
+        self.u0 = tk.DoubleVar(master, 2)  # u0
+        self.a1 = tk.DoubleVar(master, 12)  # a1
+        self.a3 = tk.DoubleVar(master, 21)  # a3
+        self.m = tk.DoubleVar(master, 123)  # m
+        self.accuracy = tk.DoubleVar(master, 0.0001)  # точность выхода на границу
+        self.error = tk.DoubleVar(master, 0.001)  # контроль лок. поргрешности
+        self.max_step = tk.DoubleVar(master, 10000000)  # макс. число шагов
+        self.step = tk.DoubleVar(master, 0.01)  # начальный шаг
         self.rb_var = tk.IntVar(master)  # хранит 0 или 1 (выход на границу x или u)
         self.rb_var.set(0)  # значение по умолчанию
         self.cb_var = tk.BooleanVar(master)  # хранит True или False (включен ли контроль погр-ти)
@@ -81,12 +82,23 @@ class Interface:
 
     #  выполняется при нажатии кнопки "Вычислить"
     def execute(self):
-        data = [
-            self.x0.get(), self.u0.get(), self.a1.get(), self.a3.get(), self.m.get(), self.accuracy.get(),
-            self.error.get(), self.max_step.get(), self.step.get(),
-            self.rb_var.get(), self.cb_var.get()]
-        print(data)
-
+        # записываем начальные условия задачи
+        init_params = (c_double*7)()
+        init_params[0] = self.x0.get()
+        init_params[1] = self.u0.get()
+        init_params[2] = self.step.get()
+        init_params[3] = self.a1.get()
+        init_params[4] = self.a3.get()
+        init_params[5] = self.m.get()
+        init_params[6] = self.max_step.get()
+        # записываем параметры чм
+        method_params = (c_double*2)()
+        method_params[0] = self.accuracy.get()  # точность выхода на границу
+        method_params[1] = self.error.get()  # контроль погрешности
+        # записываем данные с кнопок (выбор границы / контроль лп)
+        button_data = (c_int*2)()
+        button_data[0] = self.rb_var.get()  # выбор границы 0 - x, 1 - u
+        button_data[1] = self.cb_var.get()  # контроль ЛП True/False
 
 root = tk.Tk()
 gui = Interface(root)
